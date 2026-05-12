@@ -501,6 +501,64 @@ body { position:relative; }
   #action-panel { width:96vw; bottom:130px; }
 }
 
+/* Blackjack */
+#bj-btn {
+  position:absolute; top:14px; right:160px; z-index:11;
+  background:linear-gradient(180deg, #1e1e35, #14142a);
+  border:1px solid var(--gold); color:var(--gold);
+  padding:8px 16px; border-radius:20px; font-family:inherit; font-weight:700;
+  font-size:11px; letter-spacing:0.2em; cursor:pointer; transition:all 0.2s;
+}
+#bj-btn:hover { background:var(--gold); color:#000; }
+#bj-panel {
+  position:absolute; top:70px; right:14px; z-index:60;
+  width:340px; background:linear-gradient(180deg, rgba(20,20,35,0.97), rgba(10,10,20,0.97));
+  border:1px solid var(--gold); border-radius:12px; padding:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.2);
+  display:none; flex-direction:column; gap:10px;
+}
+#bj-panel.show { display:flex; }
+#bj-panel .bj-head { display:flex; justify-content:space-between; align-items:center; }
+#bj-panel .bj-title { font-family:'Playfair Display', serif; font-size:18px; color:var(--gold); font-weight:700; letter-spacing:0.1em; }
+#bj-panel .bj-close { background:transparent; border:1px solid rgba(201,168,76,0.3); color:var(--text); width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:11px; }
+#bj-panel .bj-close:hover { background:var(--red); color:#fff; border-color:var(--red); }
+#bj-panel .bj-balance { background:#0a0a18; padding:8px 12px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; }
+#bj-panel .bj-balance .lbl { font-size:10px; color:var(--muted); letter-spacing:0.25em; }
+#bj-panel .bj-balance .amt { font-size:20px; font-weight:800; color:var(--gold); font-family:'Inter', sans-serif; }
+.bj-area { background:radial-gradient(ellipse at center, #1a4731 0%, #0a2515 100%); border-radius:8px; padding:12px; min-height:200px; border:1px solid rgba(201,168,76,0.15); }
+.bj-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.bj-row .lbl { font-size:10px; color:rgba(240,230,211,0.6); letter-spacing:0.2em; min-width:60px; }
+.bj-cards { display:flex; gap:4px; flex-wrap:wrap; min-height:64px; }
+.bj-cards .card { width:42px; height:60px; }
+.bj-cards .card .rank-tl { font-size:11px; }
+.bj-cards .card .rank-tl small, .bj-cards .card .rank-br small { font-size:9px; }
+.bj-cards .card .rank-br { font-size:11px; }
+.bj-cards .card .center-suit { font-size:20px; }
+.bj-total { background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; color:var(--gold); }
+.bj-bet-row { display:flex; gap:6px; align-items:center; }
+.bj-bet-row input { flex:1; background:#0a0a18; color:var(--text); border:1px solid rgba(201,168,76,0.3); padding:8px; border-radius:4px; font-family:inherit; font-size:13px; }
+.bj-bet-row .quick { display:flex; gap:4px; }
+.bj-bet-row .quick button { background:#0a0a18; color:var(--text); border:1px solid rgba(201,168,76,0.3); padding:6px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:700; font-family:inherit; }
+.bj-bet-row .quick button:hover { background:var(--gold); color:#000; }
+.bj-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.bj-actions button {
+  flex:1; min-width:60px; padding:8px 12px; background:linear-gradient(180deg,#1e1e35,#14142a);
+  color:var(--text); border:1px solid rgba(201,168,76,0.4); border-radius:4px;
+  font-family:inherit; font-weight:700; font-size:11px; letter-spacing:0.15em;
+  text-transform:uppercase; cursor:pointer; transition:all 0.15s;
+}
+.bj-actions button:hover:not(:disabled) { background:var(--gold); color:#000; }
+.bj-actions button:disabled { opacity:0.3; cursor:not-allowed; }
+.bj-actions button.deal { border-color:var(--green-glow); color:#86efac; }
+.bj-actions button.deal:hover:not(:disabled) { background:linear-gradient(180deg,#22c55e,#16a34a); color:#fff; }
+.bj-actions button.stand { border-color:#3b82f6; color:#7eb6ff; }
+.bj-actions button.stand:hover:not(:disabled) { background:#3b82f6; color:#fff; }
+.bj-result { text-align:center; padding:8px; border-radius:6px; font-weight:700; letter-spacing:0.15em; font-size:13px; min-height:18px; }
+.bj-result.win { background:rgba(74,222,128,0.15); color:var(--green-glow); }
+.bj-result.lose { background:rgba(214,39,40,0.15); color:var(--red); }
+.bj-result.push { background:rgba(255,255,255,0.06); color:var(--muted); }
+.bj-result.bj { background:linear-gradient(90deg, rgba(201,168,76,0.3), rgba(244,217,122,0.3)); color:var(--gold-bright); }
+
 /* Toast */
 #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--panel); border:1px solid var(--gold); color:var(--text); padding:10px 20px; border-radius:6px; z-index:1000; opacity:0; transition:opacity 0.3s; pointer-events:none; }
 #toast.show { opacity:1; }
@@ -659,6 +717,45 @@ body { position:relative; }
   </div>
 
   <div id="hand-log"></div>
+
+  <button id="bj-btn" title="Blackjack">♠ BLACKJACK</button>
+  <div id="bj-panel">
+    <div class="bj-head">
+      <div class="bj-title">Blackjack</div>
+      <button class="bj-close" id="bj-close">✕</button>
+    </div>
+    <div class="bj-balance">
+      <span class="lbl">BALANCE</span>
+      <span class="amt" id="bj-balance">1000</span>
+    </div>
+    <div class="bj-area">
+      <div class="bj-row">
+        <span class="lbl">DEALER</span>
+        <span class="bj-total" id="bj-dealer-total"></span>
+      </div>
+      <div class="bj-cards" id="bj-dealer-cards"></div>
+      <div class="bj-row" style="margin-top:10px">
+        <span class="lbl">YOU</span>
+        <span class="bj-total" id="bj-you-total"></span>
+      </div>
+      <div class="bj-cards" id="bj-you-cards"></div>
+    </div>
+    <div class="bj-result" id="bj-result"></div>
+    <div class="bj-bet-row" id="bj-bet-row">
+      <input type="number" id="bj-bet-input" min="5" value="25" placeholder="Bet">
+      <div class="quick">
+        <button data-v="25">25</button>
+        <button data-v="100">100</button>
+        <button data-v="max">MAX</button>
+      </div>
+    </div>
+    <div class="bj-actions" id="bj-actions">
+      <button class="deal" id="bj-deal">DEAL</button>
+      <button id="bj-hit" disabled>HIT</button>
+      <button class="stand" id="bj-stand" disabled>STAND</button>
+      <button id="bj-double" disabled>DOUBLE</button>
+    </div>
+  </div>
 
   <div id="table-wrap">
     <div id="table">
@@ -2202,6 +2299,174 @@ setInterval(()=>{
     if (r > 0 && r < 5000) AUD.tick();
   }
 }, 1000);
+
+/* =============================================================
+   BLACKJACK MINI-GAME (local-only, separate chip stack)
+   ============================================================= */
+const BJ = {
+  state: 'idle',       // idle | playing | dealer | done
+  deck: [],
+  dealer: [],
+  player: [],
+  bet: 0,
+  balance: 1000,
+  doubled: false,
+  loadBalance() {
+    const key = 'felt-bj-' + (state.myName || 'anon');
+    const v = parseInt(localStorage.getItem(key));
+    this.balance = isNaN(v) ? 1000 : v;
+  },
+  saveBalance() {
+    const key = 'felt-bj-' + (state.myName || 'anon');
+    localStorage.setItem(key, this.balance);
+  },
+  freshShoe() {
+    const d = [];
+    for (let i=0;i<6;i++) for (const s of SUITS) for (const r of RANKS) d.push({r,s});
+    for (let i=d.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+    return d;
+  },
+  cardVal(c) { if (c.r === 'A') return 11; if (['K','Q','J','T'].includes(c.r)) return 10; return parseInt(c.r); },
+  handTotal(cards) {
+    let total = 0, aces = 0;
+    for (const c of cards) { total += this.cardVal(c); if (c.r === 'A') aces++; }
+    while (total > 21 && aces > 0) { total -= 10; aces--; }
+    return total;
+  },
+  isBJ(cards) { return cards.length === 2 && this.handTotal(cards) === 21; },
+  deal() {
+    if (this.state !== 'idle' && this.state !== 'done') return;
+    const bet = parseInt(document.getElementById('bj-bet-input').value);
+    if (!bet || bet < 5) { toast('Min bet 5'); return; }
+    if (bet > this.balance) { toast('Not enough chips'); return; }
+    this.bet = bet;
+    this.balance -= bet;
+    this.doubled = false;
+    if (this.deck.length < 20) this.deck = this.freshShoe();
+    this.player = [this.deck.pop(), this.deck.pop()];
+    this.dealer = [this.deck.pop(), this.deck.pop()];
+    this.state = 'playing';
+    AUD.cardDeal();
+    // Check naturals
+    const pBJ = this.isBJ(this.player), dBJ = this.isBJ(this.dealer);
+    if (pBJ || dBJ) {
+      this.state = 'done';
+      this.render(true);
+      if (pBJ && dBJ) this.finish('push', 'Push — Both Blackjack');
+      else if (pBJ) { this.balance += Math.floor(this.bet * 2.5); this.finish('bj', 'BLACKJACK! +' + Math.floor(this.bet*1.5)); }
+      else this.finish('lose', 'Dealer Blackjack');
+      return;
+    }
+    this.render();
+  },
+  hit() {
+    if (this.state !== 'playing') return;
+    this.player.push(this.deck.pop());
+    AUD.cardDeal();
+    const t = this.handTotal(this.player);
+    if (t > 21) { this.state = 'done'; this.render(true); this.finish('lose', 'BUST'); }
+    else if (t === 21) this.stand();
+    else this.render();
+  },
+  double() {
+    if (this.state !== 'playing' || this.player.length !== 2) return;
+    if (this.balance < this.bet) { toast('Not enough chips to double'); return; }
+    this.balance -= this.bet;
+    this.bet *= 2;
+    this.doubled = true;
+    this.player.push(this.deck.pop());
+    AUD.cardDeal();
+    const t = this.handTotal(this.player);
+    if (t > 21) { this.state = 'done'; this.render(true); this.finish('lose', 'BUST'); }
+    else this.stand();
+  },
+  stand() {
+    if (this.state !== 'playing') return;
+    this.state = 'dealer';
+    this.render(true);
+    // Dealer plays
+    const step = () => {
+      const t = this.handTotal(this.dealer);
+      // Stand on 17+ (including soft 17)
+      if (t >= 17) {
+        this.state = 'done';
+        const p = this.handTotal(this.player);
+        if (t > 21 || p > t) { this.balance += this.bet * 2; this.finish('win', '+' + this.bet); }
+        else if (p === t) { this.balance += this.bet; this.finish('push', 'Push'); }
+        else this.finish('lose', '-' + this.bet);
+        return;
+      }
+      this.dealer.push(this.deck.pop());
+      AUD.cardDeal();
+      this.render(true);
+      setTimeout(step, 600);
+    };
+    setTimeout(step, 500);
+  },
+  finish(kind, msg) {
+    this.saveBalance();
+    this.render(true);
+    const r = document.getElementById('bj-result');
+    r.className = 'bj-result ' + kind;
+    r.textContent = msg;
+    if (kind === 'win' || kind === 'bj') AUD.win();
+    if (this.balance <= 0) {
+      this.balance = 500;
+      this.saveBalance();
+      setTimeout(()=>toast('Topped up to 500 chips'), 600);
+    }
+    this.updateBalance();
+    this.updateButtons();
+  },
+  render(revealDealer = false) {
+    const dCards = document.getElementById('bj-dealer-cards');
+    const pCards = document.getElementById('bj-you-cards');
+    const dTotal = document.getElementById('bj-dealer-total');
+    const pTotal = document.getElementById('bj-you-total');
+    const dealerShown = revealDealer ? this.dealer : (this.dealer.length ? [this.dealer[0], null] : []);
+    dCards.innerHTML = dealerShown.map(c => c ? renderCard(c, false, false, 'no-anim') : renderCard(null, false, true)).join('');
+    pCards.innerHTML = this.player.map(c => renderCard(c, false, false, 'no-anim')).join('');
+    dTotal.textContent = revealDealer && this.dealer.length ? this.handTotal(this.dealer) : (this.dealer.length ? '?' : '');
+    pTotal.textContent = this.player.length ? this.handTotal(this.player) : '';
+    this.updateBalance();
+    this.updateButtons();
+  },
+  updateBalance() {
+    document.getElementById('bj-balance').textContent = this.balance.toLocaleString();
+  },
+  updateButtons() {
+    const playing = this.state === 'playing';
+    document.getElementById('bj-deal').disabled = playing || this.state === 'dealer';
+    document.getElementById('bj-hit').disabled = !playing;
+    document.getElementById('bj-stand').disabled = !playing;
+    document.getElementById('bj-double').disabled = !playing || this.player.length !== 2 || this.balance < this.bet;
+    document.getElementById('bj-bet-input').disabled = playing || this.state === 'dealer';
+  },
+  open() {
+    this.loadBalance();
+    document.getElementById('bj-panel').classList.add('show');
+    if (this.state === 'idle' || this.state === 'done') {
+      this.dealer = []; this.player = [];
+      document.getElementById('bj-result').textContent = '';
+      document.getElementById('bj-result').className = 'bj-result';
+    }
+    this.render(this.state === 'done' || this.state === 'dealer');
+  },
+  close() { document.getElementById('bj-panel').classList.remove('show'); }
+};
+document.getElementById('bj-btn').onclick = () => BJ.open();
+document.getElementById('bj-close').onclick = () => BJ.close();
+document.getElementById('bj-deal').onclick = () => BJ.deal();
+document.getElementById('bj-hit').onclick = () => BJ.hit();
+document.getElementById('bj-stand').onclick = () => BJ.stand();
+document.getElementById('bj-double').onclick = () => BJ.double();
+document.querySelectorAll('.bj-bet-row .quick button').forEach(b => {
+  b.onclick = () => {
+    const inp = document.getElementById('bj-bet-input');
+    if (b.dataset.v === 'max') inp.value = BJ.balance;
+    else inp.value = b.dataset.v;
+  };
+});
 
 /* =============================================================
    INIT
