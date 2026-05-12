@@ -56,15 +56,21 @@ body { position:relative; }
 
 .btn {
   background:transparent; color:var(--text); border:2px solid var(--gold);
-  padding:14px 38px; font-family:'Inter', sans-serif; font-size:14px;
+  padding:14px 38px; font-family:'Inter', sans-serif; font-size:13px;
   letter-spacing:0.3em; font-weight:600; cursor:pointer;
-  transition: all 0.2s; text-transform:uppercase; border-radius:2px;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1); text-transform:uppercase; border-radius:4px;
+  position:relative; overflow:hidden;
 }
-.btn:hover { background:var(--gold); color:#000; transform:translateY(-2px); box-shadow:0 8px 24px rgba(201,168,76,0.4); }
-.btn:disabled { opacity:0.4; cursor:not-allowed; }
-.btn:disabled:hover { background:transparent; color:var(--text); transform:none; box-shadow:none; }
-.btn.primary { background:var(--gold); color:#000; }
-.btn.primary:hover { background:var(--gold-bright); }
+.btn::after {
+  content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,0.08), transparent 50%);
+  pointer-events:none;
+}
+.btn:hover { background:var(--gold); color:#000; transform:translateY(-2px); box-shadow:0 10px 28px rgba(201,168,76,0.45); letter-spacing:0.35em; }
+.btn:active { transform:translateY(0); }
+.btn:disabled { opacity:0.35; cursor:not-allowed; }
+.btn:disabled:hover { background:transparent; color:var(--text); transform:none; box-shadow:none; letter-spacing:0.3em; }
+.btn.primary { background:linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#000; box-shadow:0 6px 18px rgba(201,168,76,0.4); }
+.btn.primary:hover { background:linear-gradient(180deg, #fde88a, var(--gold-bright)); box-shadow:0 12px 32px rgba(244,217,122,0.5); }
 .btn.danger { border-color:var(--red); color:var(--red); }
 .btn.danger:hover { background:var(--red); color:#fff; }
 .btn.small { padding:8px 18px; font-size:11px; }
@@ -187,10 +193,14 @@ body { position:relative; }
   pointer-events:none;
 }
 #pot-display {
-  font-family:'Playfair Display', serif; font-size:22px; color:var(--gold);
-  letter-spacing:0.1em; text-shadow:0 0 12px rgba(0,0,0,0.8);
+  font-family:'Playfair Display', serif; font-size:24px; color:var(--gold);
+  letter-spacing:0.1em; text-shadow:0 2px 10px rgba(0,0,0,0.9);
+  background:rgba(0,0,0,0.35); padding:6px 18px; border-radius:20px;
+  border:1px solid rgba(201,168,76,0.25);
+  backdrop-filter:blur(6px);
+  text-align:center;
 }
-#pot-display .pot-label { font-size:10px; letter-spacing:0.4em; color:var(--muted); display:block; text-align:center; }
+#pot-display .pot-label { font-size:9px; letter-spacing:0.45em; color:var(--muted); display:block; }
 #pot-display .pot-amount { font-weight:900; }
 #community-cards { display:flex; gap:10px; min-height:108px; align-items:center; }
 #stage-label { font-size:10px; letter-spacing:0.4em; color:rgba(240,230,211,0.5); text-transform:uppercase; }
@@ -198,13 +208,15 @@ body { position:relative; }
 /* Cards */
 .card {
   width:72px; height:100px; border-radius:8px;
-  background:#fff; color:#000; position:relative;
-  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  background:linear-gradient(135deg,#ffffff 0%, #f5f1e8 100%); color:#000; position:relative;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8);
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   font-family:'Playfair Display', serif; font-weight:700;
   transform-style:preserve-3d; transition: transform 0.6s;
   animation: dealIn 0.4s ease-out;
+  border:1px solid rgba(0,0,0,0.08);
 }
+.card.no-anim { animation: none; }
 @keyframes dealIn {
   0% { transform: translate(0, -200px) rotate(-30deg) scale(0.6); opacity:0; }
   100% { transform: translate(0,0) rotate(0) scale(1); opacity:1; }
@@ -317,30 +329,41 @@ body { position:relative; }
 
 /* Action panel */
 #action-panel {
-  position:absolute; bottom:160px; left:50%; transform:translateX(-50%);
-  background:rgba(13,13,13,0.92); border:1px solid rgba(201,168,76,0.3);
-  border-radius:10px; padding:14px 18px; display:flex; flex-direction:column;
-  gap:10px; z-index:6; box-shadow:0 10px 30px rgba(0,0,0,0.6);
-  backdrop-filter:blur(8px);
+  position:absolute; bottom:170px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(20,20,35,0.95), rgba(10,10,20,0.95));
+  border:1px solid rgba(201,168,76,0.4);
+  border-radius:12px; padding:16px 22px; display:flex; flex-direction:column;
+  gap:12px; z-index:6;
+  box-shadow:0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);
+  animation: panelIn 0.3s ease-out;
 }
+@keyframes panelIn { from { opacity:0; transform:translateX(-50%) translateY(10px);} to { opacity:1; transform:translateX(-50%) translateY(0);} }
 #action-panel.hidden-panel { display:none; }
 .action-buttons { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 .act-btn {
-  padding:10px 18px; background:var(--panel); color:var(--text);
-  border:1px solid rgba(201,168,76,0.4); border-radius:4px;
-  font-family:inherit; font-weight:700; font-size:12px; letter-spacing:0.15em;
-  text-transform:uppercase; cursor:pointer; transition:all 0.15s; min-width:90px;
+  padding:12px 22px; background:linear-gradient(180deg, #1e1e35 0%, #14142a 100%); color:var(--text);
+  border:1px solid rgba(201,168,76,0.45); border-radius:6px;
+  font-family:inherit; font-weight:700; font-size:12px; letter-spacing:0.18em;
+  text-transform:uppercase; cursor:pointer; transition:all 0.18s; min-width:100px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative; overflow:hidden;
 }
-.act-btn:hover:not(:disabled) { background:var(--gold); color:#000; }
+.act-btn::before {
+  content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%);
+  pointer-events:none;
+}
+.act-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.5); }
+.act-btn:active:not(:disabled) { transform:translateY(0); }
 .act-btn:disabled { opacity:0.3; cursor:not-allowed; }
-.act-btn.fold { border-color:#666; }
-.act-btn.fold:hover:not(:disabled) { background:#666; color:#fff; }
-.act-btn.call { border-color:#3b82f6; color:#3b82f6; }
-.act-btn.call:hover:not(:disabled) { background:#3b82f6; color:#fff; }
-.act-btn.raise { border-color:var(--green-glow); color:var(--green-glow); }
-.act-btn.raise:hover:not(:disabled) { background:var(--green-glow); color:#000; }
-.act-btn.allin { border-color:var(--red); color:var(--red); }
-.act-btn.allin:hover:not(:disabled) { background:var(--red); color:#fff; }
+.act-btn.fold { border-color:#7a7a7a; color:#bdbdbd; }
+.act-btn.fold:hover:not(:disabled) { background:#555; color:#fff; border-color:#aaa; }
+.act-btn.call { border-color:#3b82f6; color:#7eb6ff; }
+.act-btn.call:hover:not(:disabled) { background:linear-gradient(180deg,#3b82f6,#2563eb); color:#fff; }
+.act-btn.raise { border-color:var(--green-glow); color:#86efac; }
+.act-btn.raise:hover:not(:disabled) { background:linear-gradient(180deg,#22c55e,#16a34a); color:#fff; border-color:#22c55e; }
+.act-btn.allin { border-color:var(--red); color:#fca5a5; }
+.act-btn.allin:hover:not(:disabled) { background:linear-gradient(180deg,#ef4444,#b91c1c); color:#fff; }
 .raise-controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
 #raise-slider { flex:1; min-width:200px; accent-color:var(--gold); }
 .raise-quick { display:flex; gap:6px; }
@@ -1460,8 +1483,37 @@ function getSeatPosition(idx, total, table) {
   return { x, y, angle };
 }
 
+function renderSignature() {
+  if (!state.shared) return '';
+  const s = state.shared;
+  const h = s.hand || {};
+  const playersSig = s.players.map(p => `${p.id}:${p.chips}:${p.bet}:${p.folded?1:0}:${p.allIn?1:0}:${p.hasHole?1:0}`).join('|');
+  const cc = (h.community||[]).map(c=>c.r+c.s).join(',');
+  const rev = h.reveals ? Object.keys(h.reveals).sort().join(',') : '';
+  return [playersSig, h.handNo, h.stage, h.pot, h.currentBet, h.actingIdx, h.dealerIdx, cc, rev, (h.log||[]).length].join('#');
+}
+
+function updateTimers() {
+  if (!state.shared || !state.shared.hand || !state.shared.hand.actingDeadline) return;
+  const seats = document.querySelectorAll('.seat');
+  seats.forEach((seat, i) => {
+    const isActive = state.shared.hand.actingIdx === i;
+    seat.classList.toggle('active', isActive);
+    const bar = seat.querySelector('.timer-fill');
+    if (isActive && bar) {
+      const remaining = Math.max(0, state.shared.hand.actingDeadline - Date.now());
+      const pct = Math.min(100, (remaining / (TURN_TIME*1000)) * 100);
+      bar.style.width = pct + '%';
+      bar.classList.toggle('warn', pct < 25);
+    }
+  });
+}
+
 function renderTable() {
   if (!state.shared) return;
+  const sig = renderSignature();
+  if (sig === state._lastSig) { updateTimers(); return; }
+  state._lastSig = sig;
   const table = document.getElementById('table');
   // Remove old seats
   table.querySelectorAll('.seat, .bet-stack').forEach(el => el.remove());
@@ -1536,10 +1588,17 @@ function renderTable() {
     }
   });
 
-  // Community
+  // Community — only re-render if changed
   const cc = document.getElementById('community-cards');
   const community = state.shared.hand ? state.shared.hand.community : [];
-  cc.innerHTML = community.map(c => renderCard(c)).join('') + Array(Math.max(0, 5-community.length)).fill('').map(()=>'').join('');
+  const ccKey = community.map(c=>c.r+c.s).join(',');
+  if (cc.dataset.key !== ccKey) {
+    // Determine new cards (added since last)
+    const prevKey = cc.dataset.key || '';
+    const prevCount = prevKey ? prevKey.split(',').length : 0;
+    cc.innerHTML = community.map((c, i) => renderCard(c, false, false, i < prevCount ? 'no-anim' : '')).join('');
+    cc.dataset.key = ccKey;
+  }
   const stage = state.shared.hand ? state.shared.hand.stage : 'waiting';
   document.getElementById('stage-label').textContent = stage.toUpperCase();
   const potEl = document.getElementById('pot-display').querySelector('.pot-amount');
@@ -1574,7 +1633,10 @@ function chipVisuals(amount) {
 
 function renderYouHand() {
   const el = document.getElementById('you-hand');
-  if (!state.myCards || state.myCards.length === 0) { el.innerHTML = ''; return; }
+  if (!state.myCards || state.myCards.length === 0) { el.innerHTML = ''; el.dataset.key=''; return; }
+  const key = state.myCards.map(c=>c.r+c.s).join(',');
+  if (el.dataset.key === key) return;
+  el.dataset.key = key;
   el.innerHTML = state.myCards.map(c => renderCard(c)).join('');
 }
 
@@ -1586,6 +1648,7 @@ function renderActionPanel() {
   if (!isMyTurn || !me || me.folded || me.allIn) {
     panel.classList.add('hidden-panel');
     document.getElementById('emote-btn').classList.remove('show');
+    ab.dataset.key = '';
     return;
   }
   panel.classList.remove('hidden-panel');
@@ -1594,6 +1657,9 @@ function renderActionPanel() {
 
   const toCall = state.shared.hand.currentBet - me.bet;
   const canCheck = toCall === 0;
+  const apKey = `${canCheck?'c':'k'}:${toCall}:${me.chips}:${state.shared.hand.currentBet}`;
+  if (ab.dataset.key === apKey) return;
+  ab.dataset.key = apKey;
   ab.innerHTML = `
     <button class="act-btn fold" data-act="fold">FOLD</button>
     ${canCheck
@@ -2004,7 +2070,7 @@ function initBgSuits() {
    ============================================================= */
 setInterval(() => {
   if (state.shared && state.shared.hand && state.shared.hand.actingDeadline) {
-    renderTable();
+    updateTimers();
     // Host auto-folds on timeout
     if (state.isHost) {
       if (Date.now() > state.shared.hand.actingDeadline && state.hand && state.hand.actingIdx >= 0) {
