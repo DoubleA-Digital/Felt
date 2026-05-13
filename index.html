@@ -572,6 +572,50 @@ body { position:relative; }
 .log-row { padding:2px 6px; }
 .log-row .who { color:var(--gold); font-weight:600; }
 
+/* In-game chat */
+#game-chat-btn {
+  position:absolute; bottom:130px; right:20px; z-index:6;
+  width:48px; height:48px; border-radius:50%;
+  background:rgba(0,0,0,0.6); border:1px solid rgba(201,168,76,0.3);
+  color:var(--gold); font-size:20px; cursor:pointer;
+  display:none; align-items:center; justify-content:center;
+}
+#game-chat-btn.show { display:flex; }
+#game-chat-btn.unread::after {
+  content:''; position:absolute; top:4px; right:4px;
+  width:10px; height:10px; border-radius:50%; background:var(--red);
+  pointer-events:none;
+}
+#game-chat-drawer {
+  position:absolute; right:14px; bottom:190px;
+  width:280px; max-height:320px;
+  background:rgba(10,10,24,0.97); border:1px solid rgba(201,168,76,0.3);
+  border-radius:10px; padding:12px; z-index:7;
+  display:none; flex-direction:column; gap:8px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.7);
+}
+#game-chat-drawer.show { display:flex; }
+#game-chat-drawer h4 { font-family:'Playfair Display',serif; color:var(--gold); font-size:14px; margin:0; }
+#game-chat-msgs { flex:1; max-height:180px; overflow-y:auto; font-size:12px; color:rgba(240,230,211,0.85); }
+.gchat-msg { padding:2px 0; line-height:1.4; }
+.gchat-msg .who { color:var(--gold); font-weight:600; margin-right:4px; }
+.gchat-msg.system { color:var(--muted); font-style:italic; }
+#game-chat-input-row { display:flex; gap:6px; }
+#game-chat-input { flex:1; background:#0a0a18; color:var(--text); border:1px solid rgba(201,168,76,0.2); padding:6px 8px; font-family:inherit; font-size:12px; border-radius:4px; outline:none; }
+#game-chat-input:focus { border-color:var(--gold); }
+#game-chat-send { padding:6px 10px; background:var(--gold); color:#000; border:none; border-radius:4px; font-weight:700; cursor:pointer; font-size:11px; }
+
+/* Hand strength label */
+#hand-strength { font-size:10px; color:var(--gold); letter-spacing:0.18em; text-align:center; font-weight:700; min-height:14px; text-transform:uppercase; }
+
+/* Rebuy button */
+#rebuy-btn { position:absolute; bottom:14px; right:20px; z-index:5; display:none; }
+#rebuy-btn.show { display:block; }
+
+/* BB option indicator */
+.badge.option { background:rgba(201,168,76,0.3); color:var(--gold-bright); animation:optionPulse 1s infinite; }
+@keyframes optionPulse { 50%{ background:rgba(201,168,76,0.55); } }
+
 </style>
 </head>
 <body>
@@ -777,12 +821,26 @@ body { position:relative; }
       <div class="you-chips" id="you-chips">0</div>
       <div class="you-badges" id="you-badges"></div>
     </div>
-    <div id="you-hand"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div id="you-hand"></div>
+      <div id="hand-strength"></div>
+    </div>
     <div id="you-timer"><div class="fill"></div></div>
   </div>
 
   <button id="emote-btn" title="Emote">😄</button>
   <div id="emote-panel"></div>
+
+  <button id="game-chat-btn" title="Chat">💬</button>
+  <div id="game-chat-drawer">
+    <h4>CHAT</h4>
+    <div id="game-chat-msgs"></div>
+    <div id="game-chat-input-row">
+      <input type="text" id="game-chat-input" placeholder="Say something..." maxlength="200">
+      <button id="game-chat-send">SEND</button>
+    </div>
+  </div>
+  <button class="btn primary" id="rebuy-btn">REBUY</button>
 
   <div id="action-panel" class="hidden-panel">
     <div class="action-buttons" id="action-buttons"></div>
@@ -1455,6 +1513,18 @@ const net = {
       const emote = msg.emote;
       net.broadcast({ type:'emote', playerId:id, emote });
       showEmote(id, emote);
+    } else if (msg.type === 'rebuy') {
+      if (!state.settings.rebuy) return;
+      const id = conn ? conn._playerId : msg._selfId;
+      const p = state.players.find(x => x.id === id);
+      if (p && p.chips === 0) {
+        p.chips = state.settings.rebuyAmt;
+        const m = { who:'', text:`${p.name} rebuys for ${state.settings.rebuyAmt}`, system:true, t:Date.now() };
+        net.broadcast({ type:'chat', msg:m });
+        addGameChatMsg(m);
+        net.broadcastLobby();
+        pushPublicState();
+      }
     } else if (msg.type === 'kick') {
       // host kicking
     }
@@ -1467,7 +1537,8 @@ const net = {
       renderLobby();
     } else if (msg.type === 'chat') {
       state.chat.push(msg.msg);
-      addChatMsg(msg.msg);
+      if (state.scene === 'play') addGameChatMsg(msg.msg);
+      else addChatMsg(msg.msg);
     } else if (msg.type === 'start') {
       enterGame();
     } else if (msg.type === 'state') {
@@ -1498,17 +1569,44 @@ const net = {
 
 function onPeerLeft(conn) {
   const idx = state.players.findIndex(p => p.id === conn._playerId);
-  if (idx >= 0) {
-    const removed = state.players[idx];
-    // If game in progress, fold them
-    if (state.hand && state.hand.perPlayer[removed.id]) {
-      state.hand.perPlayer[removed.id].folded = true;
-      if (state.hand.actingIdx === idx) state.hand.actingIdx = nextActingFrom(idx);
+  if (idx < 0) return;
+  const removed = state.players[idx];
+
+  if (state.hand && state.hand.perPlayer[removed.id]) {
+    state.hand.perPlayer[removed.id].folded = true;
+
+    // Recompute actingIdx BEFORE splice (nextActingFrom uses current array)
+    if (state.hand.actingIdx === idx) {
+      let next = nextActingFrom(idx);
+      // nextActingFrom returned an index in the pre-splice array; adjust for the removal
+      if (next > idx) next--;
+      state.hand.actingIdx = next;
+    } else if (state.hand.actingIdx > idx) {
+      state.hand.actingIdx--;
     }
-    state.players.splice(idx, 1);
-    state.conns = state.conns.filter(c => c !== conn);
+    // Adjust all other numeric hand indices
+    const adjustIdx = (v) => (v > idx ? v - 1 : v === idx ? -1 : v);
+    state.hand.dealerIdx = adjustIdx(state.hand.dealerIdx);
+    state.hand.sbIdx     = adjustIdx(state.hand.sbIdx);
+    state.hand.bbIdx     = adjustIdx(state.hand.bbIdx);
+  }
+
+  state.players.splice(idx, 1);
+  state.conns = state.conns.filter(c => c !== conn);
+
+  const addChatSystem = (txt) => {
+    addGameChatMsg({ who:'', text:txt, system:true });
+    net.broadcast({ type:'chat', msg:{ who:'', text:txt, system:true, t:Date.now() } });
+  };
+  addChatSystem(`${removed.name} left the game`);
+
+  if (state.hand) {
+    const alive = state.players.filter(p => p.chips > 0);
+    if (alive.length < 2) { endGame(); return; }
+    requestAction();
+    pushPublicState();
+  } else {
     net.broadcastLobby();
-    if (state.hand) pushPublicState();
   }
 }
 
@@ -1796,7 +1894,13 @@ function chipVisuals(amount) {
 function renderYouBar() {
   const me = state.shared && state.shared.players.find(p => p.id === state.myId);
   const bar = document.getElementById('you-bar');
-  if (!me) { bar.style.display = 'none'; return; }
+  const rebuyBtn = document.getElementById('rebuy-btn');
+  if (!me) { bar.style.display = 'none'; if (rebuyBtn) rebuyBtn.classList.remove('show'); return; }
+  // Show rebuy button when out of chips, rebuy is on, and no active hand in progress for this player
+  if (rebuyBtn) {
+    const canRebuy = state.shared.settings.rebuy && me.chips === 0 && state.shared.hand && !me.inHand;
+    rebuyBtn.classList.toggle('show', !!canRebuy);
+  }
   bar.style.display = '';
   document.getElementById('you-avatar').outerHTML =
     `<div id="you-avatar"></div>`;
@@ -1815,10 +1919,27 @@ function renderYouBar() {
     if (me.allIn) badges += '<span class="badge allin">ALL-IN</span>';
     if (me.bet > 0) badges += `<span class="badge" style="background:rgba(201,168,76,0.2); color:var(--gold)">BET ${me.bet}</span>`;
   }
+  // BB option indicator: it's my turn, I can check (not facing a raise), and it's preflop
+  const h = state.shared.hand;
+  const isMyTurn = h && h.actingIdx === state.mySeatIdx;
+  if (isMyTurn && h && h.stage === 'preflop') {
+    const myIdx = state.shared.players.findIndex(p => p.id === state.myId);
+    if (myIdx === h.bbIdx && (h.currentBet - me.bet) === 0) {
+      badges += '<span class="badge option">OPTION</span>';
+    }
+  }
   document.getElementById('you-badges').innerHTML = badges;
-  const isMyTurn = state.shared.hand && state.shared.hand.actingIdx === state.mySeatIdx;
   bar.classList.toggle('active', !!isMyTurn);
   bar.classList.toggle('folded', !!me.folded);
+
+  // Live hand strength
+  const strengthEl = document.getElementById('hand-strength');
+  if (strengthEl && state.myCards && state.myCards.length === 2 && h && h.community && h.community.length >= 3) {
+    const best = evaluateBest(state.myCards.concat(h.community));
+    strengthEl.textContent = best.name;
+  } else if (strengthEl) {
+    strengthEl.textContent = '';
+  }
 }
 
 function renderYouHand() {
@@ -1943,13 +2064,35 @@ window.kickPlayer = function(id) {
 
 function addChatMsg(m) {
   const el = document.getElementById('chat-messages');
+  if (!el) return;
   const div = document.createElement('div');
   div.className = 'chat-msg';
-  div.innerHTML = `<span class="who">${m.who}:</span>${escapeHTML(m.text)}`;
+  div.innerHTML = `<span class="who">${escapeHTML(m.who)}:</span>${escapeHTML(m.text)}`;
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
+  // Mirror to in-game chat
+  addGameChatMsg(m);
 }
-function escapeHTML(s) { return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+function addGameChatMsg(m) {
+  const el = document.getElementById('game-chat-msgs');
+  if (!el) return;
+  const div = document.createElement('div');
+  div.className = m.system ? 'gchat-msg system' : 'gchat-msg';
+  div.innerHTML = m.system
+    ? `<em>${escapeHTML(m.text)}</em>`
+    : `<span class="who">${escapeHTML(m.who)}:</span>${escapeHTML(m.text)}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  // Show unread dot if drawer is closed
+  const btn = document.getElementById('game-chat-btn');
+  const drawer = document.getElementById('game-chat-drawer');
+  if (btn && drawer && !drawer.classList.contains('show')) {
+    btn.classList.add('unread');
+  }
+}
+
+function escapeHTML(s) { return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
 
 /* =============================================================
    GAME ENTRY
@@ -1958,10 +2101,41 @@ function enterGame() {
   show('game-screen');
   state.scene = 'play';
   if (state.isHost && !state.hand) {
-    // Initialize start chips for endStats
     for (const p of state.players) state.endStats.startChips[p.id] = p.chips;
     setTimeout(()=>startHand(), 600);
   }
+  document.getElementById('game-chat-btn').classList.add('show');
+
+  // In-game chat toggle
+  const chatBtn = document.getElementById('game-chat-btn');
+  const chatDrawer = document.getElementById('game-chat-drawer');
+  chatBtn.onclick = () => {
+    chatDrawer.classList.toggle('show');
+    chatBtn.classList.remove('unread');
+  };
+  const gcSend = document.getElementById('game-chat-send');
+  const gcInput = document.getElementById('game-chat-input');
+  const sendGameChat = () => {
+    const text = gcInput.value.trim();
+    if (!text) return;
+    gcInput.value = '';
+    if (state.isHost) {
+      const m = { who:state.myName, text, t:Date.now() };
+      state.chat.push(m);
+      net.broadcast({ type:'chat', msg:m });
+      addGameChatMsg(m);
+    } else {
+      net.sendToHost({ type:'chat', text });
+    }
+  };
+  gcSend.onclick = sendGameChat;
+  gcInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendGameChat(); });
+
+  // Rebuy button
+  document.getElementById('rebuy-btn').onclick = () => {
+    net.sendToHost({ type:'rebuy' });
+  };
+
   // Build emote panel
   const ep = document.getElementById('emote-panel');
   ep.innerHTML = EMOJIS.map(e => `<div class="emote-slot" data-e="${e}">${e}</div>`).join('');
@@ -2190,6 +2364,7 @@ document.getElementById('chat-input').addEventListener('keydown', e => {
 });
 function sendChat() {
   const inp = document.getElementById('chat-input');
+  if (!inp) return;
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
@@ -2273,18 +2448,20 @@ function initBgSuits() {
 /* =============================================================
    TURN TIMER LOOP
    ============================================================= */
+let _autoFolding = false;
 setInterval(() => {
   if (state.shared && state.shared.hand && state.shared.hand.actingDeadline) {
     updateTimers();
-    // Host auto-folds on timeout
-    if (state.isHost) {
+    if (state.isHost && !_autoFolding) {
       if (Date.now() > state.shared.hand.actingDeadline && state.hand && state.hand.actingIdx >= 0) {
         const p = state.players[state.hand.actingIdx];
         if (p) {
           const ph = state.hand.perPlayer[p.id];
-          if (ph && !ph.folded) {
+          if (ph && !ph.folded && !ph.allIn) {
+            _autoFolding = true;
             const toCall = state.hand.currentBet - ph.bet;
             performAction(p.id, { type: toCall === 0 ? 'check' : 'fold' });
+            _autoFolding = false;
           }
         }
       }
